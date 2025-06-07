@@ -21,10 +21,13 @@ public class MessageController {
     private MessageRepository repository;
 
     @PostMapping
-    public ResponseEntity<Message> postMessage(@RequestBody Message message) {
+    public ResponseEntity<?> postMessage(@RequestBody Message message) {
         logger.info("POST /messages called by {} with content {}", message.getAuthor(), message.getContent());
+        if (message.getAuthor() ==null | message.getContent() == null) {
+            return ResponseEntity.status(401).body("Ensure your message has an author and content");
+        }
         Message saved = repository.save(message);
-        return ResponseEntity.status(HttpStatusCode.valueOf(200)).body(saved);
+        return ResponseEntity.status(HttpStatusCode.valueOf(201)).body(saved);
     }
 
     @GetMapping
