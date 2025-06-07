@@ -31,6 +31,19 @@ public class MessageControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
+    void invalidPayloadShouldReturnErrorAndMessage() throws Exception {
+        Message saved = new Message();
+
+        when(repository.save(any(Message.class))).thenReturn(saved);
+
+        mockMvc.perform(post("/messages")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(saved)))
+                .andExpect(content().string("Ensure your message has an author and content"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
     void postCallShouldReturnSavedMessages() throws Exception {
         Message saved = new Message();
         saved.setId(1L);
@@ -43,7 +56,7 @@ public class MessageControllerTest {
         mockMvc.perform(post("/messages")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(saved)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.author").value("Matt Murdock"))
                 .andExpect(jsonPath("$.content").value("I'm a really good lawyer"));
