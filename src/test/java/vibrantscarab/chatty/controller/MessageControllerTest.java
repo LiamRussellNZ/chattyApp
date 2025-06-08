@@ -4,10 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import vibrantscarab.chatty.domain.Message;
+import vibrantscarab.chatty.exceptions.GlobalExceptionHandler;
 import vibrantscarab.chatty.repository.MessageRepository;
 
 import java.util.List;
@@ -19,6 +21,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(MessageController.class)
+@Import(GlobalExceptionHandler.class)
 public class MessageControllerTest {
 
     @Autowired
@@ -31,16 +34,14 @@ public class MessageControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void invalidPayloadShouldReturnErrorAndMessage() throws Exception {
-        Message saved = new Message();
-
-        when(repository.save(any(Message.class))).thenReturn(saved);
+    void authorAndContentMissingShouldReturnErrorAndMessage() throws Exception {
+        String invalidJson = "{}";
 
         mockMvc.perform(post("/messages")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(saved)))
-                .andExpect(content().string("Ensure your message has an author and content"))
-                .andExpect(status().is4xxClientError());
+                        .content(invalidJson))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Author and content are required"));
     }
 
     @Test
